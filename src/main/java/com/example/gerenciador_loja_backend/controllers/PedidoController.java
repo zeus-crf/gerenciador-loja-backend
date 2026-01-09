@@ -43,6 +43,15 @@ public class PedidoController {
         return pedidoService.atualizarPedido(id, dto);
     }
 
+    @GetMapping("/cliente/{idCliente}")
+    public ResponseEntity<List<Pedido>> getPedidosPorCliente(@PathVariable UUID idCliente) {
+        List<Pedido> pedidos = pedidoService.getPedidosPorCliente(idCliente);
+        if (pedidos.isEmpty()) {
+            return ResponseEntity.noContent().build(); // ou ok com lista vazia
+        }
+        return ResponseEntity.ok(pedidos);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         boolean deletado = pedidoService.deletarPedido(id);
