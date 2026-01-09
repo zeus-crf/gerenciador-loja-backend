@@ -1,4 +1,4 @@
-package com.example.gerenciador_loja_backend.security;
+package com.example.gerenciador_loja_backend.Cors;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
