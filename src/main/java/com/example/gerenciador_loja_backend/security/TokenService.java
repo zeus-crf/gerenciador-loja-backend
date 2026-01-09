@@ -19,9 +19,7 @@ public class TokenService {
 
     private static final String ISSUER = "login-auth-api";
 
-    /**
-     * 🔐 GERA TOKEN JWT
-     */
+    // 🔐 Gera token JWT
     public String generateToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -38,39 +36,27 @@ public class TokenService {
         }
     }
 
-    /**
-     * ✅ VALIDA TOKEN
-     */
+    // ✅ Valida token
     public boolean isTokenValid(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
-            JWT.require(algorithm)
-                    .withIssuer(ISSUER)
-                    .build()
-                    .verify(token);
-
+            JWT.require(algorithm).withIssuer(ISSUER).build().verify(token);
             return true;
-
         } catch (JWTVerificationException ex) {
             System.out.println("❌ Token inválido: " + ex.getMessage());
             return false;
         }
     }
 
-    /**
-     * 👤 EXTRAI USERNAME DO TOKEN
-     */
+    // 👤 Extrai username do token
     public String getUsername(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
             return JWT.require(algorithm)
                     .withIssuer(ISSUER)
                     .build()
                     .verify(token)
                     .getSubject();
-
         } catch (JWTVerificationException ex) {
             throw new RuntimeException("Token inválido ou expirado", ex);
         }

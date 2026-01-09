@@ -1,4 +1,4 @@
-package com.example.gerenciador_loja_backend.Cors;
+package com.example.gerenciador_loja_backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
+                        // ✅ Use allowedOriginPatterns para permitir credenciais
                         .allowedOriginPatterns("http://localhost:5173")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")

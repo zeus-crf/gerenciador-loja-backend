@@ -2,7 +2,6 @@ package com.example.gerenciador_loja_backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -14,6 +13,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -26,73 +30,32 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        System.out.println("🛡️ SecurityConfig carregado");
-
         http
-                // ❌ CSRF desativado (API stateless)
                 .csrf(csrf -> csrf.disable())
-
-                // ✅ CORS habilitado (usa seu CorsConfig)
-                .cors(cors -> {})
-
-                // ✅ API sem sessão
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // ✅ DIFERENCIAR 401 de 403
                 .exceptionHandling(ex -> ex
-                        // Token inválido / ausente → 401
-                        .authenticationEntryPoint(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
-                        )
-                        // Regra de negócio / permissão → 403
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         .accessDeniedHandler(accessDeniedHandler())
                 )
-
-                // ✅ REGRAS DE ACESSO
                 .authorizeHttpRequests(auth -> auth
-
-                        // 🔓 ROTAS PÚBLICAS
-                        .requestMatchers(HttpMethod.POST,
-                                "/auth/login",
-                                "/auth/register"
-                        ).permitAll()
-
-                        // 🔐 ROTAS PROTEGIDAS (exigem token)
-                        .requestMatchers("/clientes/**").authenticated()
-                        .requestMatchers("/pedidos/**").authenticated()
-                        .requestMatchers("/usuarios/**").authenticated()
-
-                        // 🔐 QUALQUER OUTRA
-                        .anyRequest().authenticated()
+                        .requestMatchers("/auth/**", "/login").permitAll()
+                        .requestMatchers("/dashboard/**", "/pedidos/**", "/clientes/**", "/usuarios/**").authenticated()
+                        .anyRequest().denyAll()
                 )
-
-                // ✅ FILTRO JWT ANTES DO SPRING
-                .addFilterBefore(
-                        securityFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * ⚠️ IMPORTANTE:
-     * Este handler é acionado quando o usuário
-     * ESTÁ autenticado, mas NÃO TEM permissão
-     * (ex: tentar se deletar)
-     */
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, ex) -> {
-            System.out.println("🚫 AccessDeniedHandler acionado");
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"error\": \"Você não tem permissão para executar esta ação\"}"
-            );
+            response.getWriter().write("{\"error\": \"Você não tem permissão para executar esta ação\"}");
         };
     }
 
@@ -102,9 +65,23 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    // 🔹 CORS Configuration seguro
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 🔹 Não usar "*" aqui se allowCredentials=true
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://meusite.com"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // ✅ permite cookies/autenticação
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

@@ -6,6 +6,7 @@ import com.example.gerenciador_loja_backend.dtos.RegisterRequestDto;
 import com.example.gerenciador_loja_backend.models.Usuario;
 import com.example.gerenciador_loja_backend.repositories.UsuarioRepository;
 import com.example.gerenciador_loja_backend.security.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,6 +76,12 @@ public class AuthController {
 
         // Retorna o token, NÃO a senha criptografada!
         return ResponseEntity.ok(new LoginResponseDto(newUser.getUsername(), token));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        // Se usar blacklist de token, invalidar aqui
+        return ResponseEntity.ok().build();
     }
 
 }

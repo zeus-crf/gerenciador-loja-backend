@@ -1,6 +1,7 @@
 package com.example.gerenciador_loja_backend.controllers;
 
 import com.example.gerenciador_loja_backend.dtos.PedidoDto;
+import com.example.gerenciador_loja_backend.enuns.StatusDePagamento;
 import com.example.gerenciador_loja_backend.models.Pedido;
 import com.example.gerenciador_loja_backend.services.PedidoService;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/pedidos")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class PedidoController {
 
     private final PedidoService pedidoService;
@@ -20,39 +20,38 @@ public class PedidoController {
         this.pedidoService = pedidoService;
     }
 
+    // ==========================
+    // CRUD pedidos
+    // ==========================
+    @GetMapping
+    public List<Pedido> getAll() {
+        return pedidoService.getAllPedidos();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Pedido> getOne(@PathVariable UUID id) {
+        return pedidoService.getOnePedido(id);
+    }
+
     @PostMapping
-    public ResponseEntity<Pedido> criarPedido(@RequestBody PedidoDto dto) {
+    public ResponseEntity<Pedido> criar(@RequestBody PedidoDto dto) {
         return pedidoService.criarPedido(dto);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Pedido> atualizar(@PathVariable UUID id, @RequestBody PedidoDto dto) {
+        return pedidoService.atualizarPedido(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
+        boolean deletado = pedidoService.deletarPedido(id);
+        return deletado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<Pedido> atualizarPedido(@PathVariable UUID id, @RequestBody PedidoDto dto) {
         return pedidoService.atualizarPedido(id, dto);
     }
-
-    @GetMapping
-    public List<Pedido> listarPedidos() {
-        return pedidoService.getAllPedidos();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Pedido> buscarPedido(@PathVariable UUID id) {
-        return pedidoService.getOnePedido(id);
-    }
-
-    @GetMapping("/cliente/{idCliente}")
-    public List<Pedido> getPedidosPorCliente(@PathVariable UUID idCliente) {
-        return pedidoService.getPedidosPorCliente(idCliente);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarPedido(@PathVariable UUID id) {
-        boolean deletado = pedidoService.deletarPedido(id);
-        if (deletado) {
-            return ResponseEntity.noContent().build(); // 204
-        } else {
-            return ResponseEntity.notFound().build(); // 404
-        }
-    }
-
 }

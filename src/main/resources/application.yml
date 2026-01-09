@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: gerenciador_loja_backend
+
+  profiles:
+    active: dev # troque para prod em produção
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET}
