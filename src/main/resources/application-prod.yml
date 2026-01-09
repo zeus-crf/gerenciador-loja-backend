@@ -20,4 +20,4 @@ logging:
 api:
   security:
     token:
-      secret: ${JWT_SECRET}
+      secret: ${api.security.token.secret}

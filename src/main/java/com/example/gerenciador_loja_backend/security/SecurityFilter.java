@@ -33,7 +33,6 @@ public class SecurityFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String token = recuperarToken(request);
-
         if (token != null) {
             try {
                 if (tokenService.isTokenValid(token)) {
