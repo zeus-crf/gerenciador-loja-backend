@@ -9,7 +9,7 @@ import com.example.gerenciador_loja_backend.enuns.StatusDePagamento;
 public record PedidoDto(
         UUID idCliente,
         List<ItemPedidoDto> itens,          // <--- aqui usamos o DTO
-        StatusDePagamento statusDePagamento,
+        String statusDePagamento,
         Integer parcelasTotais,
         Integer parcelasRestantes,
         Integer parcelasPagas

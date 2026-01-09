@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 @Entity
 @Table(name = "pedido")
 public class Pedido {
@@ -91,4 +92,5 @@ public class Pedido {
         itens.remove(item);
         item.setPedido(null);
     }
+
 }

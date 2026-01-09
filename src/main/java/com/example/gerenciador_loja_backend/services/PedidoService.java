@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class PedidoService {
@@ -27,7 +29,9 @@ public class PedidoService {
         this.clienteRepository = clienteRepository;
     }
 
+    // ==========================
     // Criar pedido
+    // ==========================
     public ResponseEntity<Pedido> criarPedido(PedidoDto dto) {
         Optional<Cliente> clienteOptional = clienteRepository.findById(dto.idCliente());
         if (clienteOptional.isEmpty()) return ResponseEntity.notFound().build();
@@ -58,6 +62,9 @@ public class PedidoService {
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
+    // ==========================
+    // Buscar pedidos
+    // ==========================
     public List<Pedido> getAllPedidos() {
         return pedidoRepository.findAll();
     }
@@ -72,43 +79,53 @@ public class PedidoService {
         return pedidoRepository.findByClienteId(idCliente);
     }
 
-    // ============================
-    // Métodos auxiliares
-    // ============================
-    public void calcularValorTotal(Pedido pedido) {
-        double total = pedido.getItens().stream()
-                .mapToDouble(item -> (item.getPrecoUnitario() != null ? item.getPrecoUnitario() : 0.0) * item.getQuantidade())
-                .sum();
-        pedido.setValorTotal(total);
-    }
 
-    private void atualizarStatus(Pedido pedido) {
-        if (pedido.getParcelasRestantes() == 0) pedido.setStatusDePagamento(StatusDePagamento.PAGO);
-        else pedido.setStatusDePagamento(StatusDePagamento.PENDENTE);
-    }
     // Atualizar pedido parcialmente
     public ResponseEntity<Pedido> atualizarPedido(UUID id, PedidoDto dto) {
+        Logger logger = LoggerFactory.getLogger(getClass());
+        logger.info("=== Iniciando atualização do pedido ID={} ===", id);
+
         Optional<Pedido> pedidoOptional = pedidoRepository.findById(id);
-        if (pedidoOptional.isEmpty()) return ResponseEntity.notFound().build();
+        if (pedidoOptional.isEmpty()) {
+            logger.warn("Pedido ID={} não encontrado", id);
+            return ResponseEntity.notFound().build();
+        }
 
         Pedido pedido = pedidoOptional.get();
+        logger.info("Pedido atual: {}", pedido);
 
         // ============================
         // Atualiza cliente apenas se enviado
         // ============================
         if (dto.idCliente() != null) {
             Optional<Cliente> clienteOptional = clienteRepository.findById(dto.idCliente());
-            clienteOptional.ifPresent(pedido::setCliente);
+            clienteOptional.ifPresentOrElse(
+                    pedido::setCliente,
+                    () -> logger.warn("Cliente ID={} não encontrado, não foi atualizado", dto.idCliente())
+            );
+            logger.info("Cliente atualizado para: {}", pedido.getCliente());
         }
 
         // ============================
-        // Atualiza parcelas apenas se enviados
+        // Atualiza parcelas
         // ============================
-        if (dto.parcelasTotais() != null) pedido.setParcelasTotais(dto.parcelasTotais());
-        if (dto.parcelasRestantes() != null) pedido.setParcelasRestantes(dto.parcelasRestantes());
+        if (dto.parcelasTotais() != null) {
+            pedido.setParcelasTotais(dto.parcelasTotais());
+            logger.info("Parcelas totais atualizadas para: {}", dto.parcelasTotais());
+        }
+
+        if (dto.parcelasRestantes() != null) {
+            pedido.setParcelasRestantes(dto.parcelasRestantes());
+            logger.info("Parcelas restantes definidas diretamente para: {}", dto.parcelasRestantes());
+        } else if (dto.parcelasPagas() != null) {
+            // Calcula automaticamente parcelasRestantes se enviado parcelasPagas
+            int parcelasRestantes = Math.max(pedido.getParcelasTotais() - dto.parcelasPagas(), 0);
+            pedido.setParcelasRestantes(parcelasRestantes);
+            logger.info("Parcelas restantes calculadas a partir de parcelas pagas ({}): {}", dto.parcelasPagas(), parcelasRestantes);
+        }
 
         // ============================
-        // Atualiza itens apenas se enviado
+        // Atualiza itens
         // ============================
         if (dto.itens() != null && !dto.itens().isEmpty()) {
             pedido.getItens().clear();
@@ -122,18 +139,96 @@ public class PedidoService {
                 return item;
             }).collect(Collectors.toList());
             pedido.setItens(itens);
+            logger.info("Itens atualizados: {}", itens);
         }
 
         // ============================
-        // Atualiza valor total e status
+// Atualiza status de pagamento baseado no front
+// ============================
+            if (dto.statusDePagamento() != null) {
+                StatusDePagamento statusEnum;
+                switch (dto.statusDePagamento().toLowerCase()) {
+                    case "paid":
+                        statusEnum = StatusDePagamento.PAGO;
+                        pedido.setParcelasRestantes(0); // todas pagas
+                        break;
+
+                    case "pending":
+                        statusEnum = StatusDePagamento.PENDENTE;
+                        break;
+
+                    case "installment":
+                        statusEnum = StatusDePagamento.PARCELADO;
+                        break;
+
+                    default:
+                        logger.warn("Status do pagamento enviado pelo front é inválido: {}", dto.statusDePagamento());
+                        statusEnum = null;
+                        break;
+                }
+
+                if (statusEnum != null) {
+                    pedido.setStatusDePagamento(statusEnum);
+                    logger.info("Status do pagamento atualizado para: {}", statusEnum);
+                }
+            }
+
+        else {
+            // Se não veio nada, atualiza automaticamente baseado em parcelasRestantes
+            if (pedido.getParcelasRestantes() == 0) {
+                pedido.setStatusDePagamento(StatusDePagamento.PAGO);
+            } else {
+                pedido.setStatusDePagamento(StatusDePagamento.PENDENTE);
+            }
+        }
+
+
+        // ============================
+        // Atualiza valor total
         // ============================
         calcularValorTotal(pedido);
-        atualizarStatus(pedido);
+        logger.info("Valor total recalculado: {}", pedido.getValorTotal());
 
+        // ============================
+        // Atualiza status de pagamento
+        // ============================
+        if (pedido.getParcelasRestantes() == 0) {
+            pedido.setStatusDePagamento(StatusDePagamento.PAGO);
+        } else {
+            pedido.setStatusDePagamento(StatusDePagamento.PENDENTE);
+        }
+        logger.info("Status de pagamento atualizado para: {}", pedido.getStatusDePagamento());
+
+        // ============================
+        // Salva pedido atualizado
+        // ============================
         Pedido atualizado = pedidoRepository.save(pedido);
+        logger.info("Pedido atualizado com sucesso: {}", atualizado);
+        logger.info("=== Fim da atualização do pedido ID={} ===", id);
+
         return ResponseEntity.ok(atualizado);
     }
 
+
+    // ==========================
+    // Atualizar status de pagamento
+    // ==========================
+    public Pedido atualizarStatusPagamento(UUID id, StatusDePagamento novoStatus) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        pedido.setStatusDePagamento(novoStatus);
+
+        if (novoStatus == StatusDePagamento.PAGO) {
+            pedido.setParcelasRestantes(0);
+        }
+
+        return pedidoRepository.save(pedido);
+    }
+
+    // ==========================
+    // Deletar pedido
+    // ==========================
     public boolean deletarPedido(UUID id) {
         Optional<Pedido> pedidoOpt = pedidoRepository.findById(id);
         if (pedidoOpt.isPresent()) {
@@ -142,5 +237,22 @@ public class PedidoService {
         }
         return false;
     }
+
+    // ==========================
+    // Métodos auxiliares
+    // ==========================
+    private void calcularValorTotal(Pedido pedido) {
+        double total = pedido.getItens().stream()
+                .mapToDouble(item -> (item.getPrecoUnitario() != null ? item.getPrecoUnitario() : 0.0) * item.getQuantidade())
+                .sum();
+        pedido.setValorTotal(total);
+    }
+
+    private void atualizarStatus(Pedido pedido) {
+        if (pedido.getParcelasRestantes() == 0) pedido.setStatusDePagamento(StatusDePagamento.PAGO);
+        else pedido.setStatusDePagamento(StatusDePagamento.PENDENTE);
+    }
+
+
 
 }
