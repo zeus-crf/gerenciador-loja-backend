@@ -18,35 +18,44 @@ import java.io.IOException;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
-    private final UsuarioRepository usuarioRepository;
     private final UserDetailsService userDetailsService;
 
-    public SecurityFilter(TokenService tokenService, UsuarioRepository usuarioRepository, UserDetailsService userDetailsService) {
+    public SecurityFilter(TokenService tokenService, UserDetailsService userDetailsService) {
         this.tokenService = tokenService;
-        this.usuarioRepository = usuarioRepository;
         this.userDetailsService = userDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        try {
-            String token = recuperarToken(request);
+        String token = recuperarToken(request);
 
-            if (token != null && tokenService.isTokenValid(token)) {
-                String username = tokenService.getUsername(token);
+        if (token != null) {
+            try {
+                if (tokenService.isTokenValid(token)) {
+                    String username = tokenService.getUsername(token);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
+            } catch (Exception ex) {
+                // 🔥 log REAL do erro
+                System.err.println("❌ Token inválido: " + ex.getMessage());
             }
-
-        } catch (Exception ex) {
-            System.out.println("⚠️ Erro no SecurityFilter: " + ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
@@ -58,10 +67,5 @@ public class SecurityFilter extends OncePerRequestFilter {
             return authHeader.substring(7);
         }
         return null;
-    }
-
-    @Override
-    protected boolean shouldNotFilterErrorDispatch() {
-        return true;
     }
 }
