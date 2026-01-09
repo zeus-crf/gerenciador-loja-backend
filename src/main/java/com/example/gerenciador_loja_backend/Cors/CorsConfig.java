@@ -14,12 +14,14 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOriginPatterns(
-                                "http://localhost:5173",                      // front local
-                                "https://gerenciador-loja-frontend-fcg8.vercel.app" // front na Vercel
+                                "http://localhost:5173",
+                                "https://gerenciador-loja-frontend-fcg8.vercel.app"
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        .exposedHeaders("Authorization");
+
             }
         };
     }
