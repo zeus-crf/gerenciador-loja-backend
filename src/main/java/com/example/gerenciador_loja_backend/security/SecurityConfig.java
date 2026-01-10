@@ -74,14 +74,22 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 🔹 Não usar "*" aqui se allowCredentials=true
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://meusite.com"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "https://gerenciador-loja-frontend-fcg8.vercel.app"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // ✅ permite cookies/autenticação
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

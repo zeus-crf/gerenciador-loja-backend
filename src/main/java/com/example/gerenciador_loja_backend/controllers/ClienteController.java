@@ -18,7 +18,10 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/clientes")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(
+        origins = {"http://localhost:5173", "https://gerenciador-loja-frontend-fcg8.vercel.app"},
+        allowCredentials = "true"
+)
 public class ClienteController {
 
     private static final Logger log =
