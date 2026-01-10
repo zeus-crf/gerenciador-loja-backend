@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dashboard")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(
+        origins = {"http://localhost:5173", "https://gerenciador-loja-frontend-fcg8.vercel.app"},
+        allowCredentials = "true"
+)
 public class DashboardController {
 
     private final DashboardService dashboardService;
