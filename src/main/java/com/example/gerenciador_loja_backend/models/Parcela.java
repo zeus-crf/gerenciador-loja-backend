@@ -1,6 +1,7 @@
 package com.example.gerenciador_loja_backend.models;
 
 import com.example.gerenciador_loja_backend.enuns.StatusParcela;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -22,10 +23,12 @@ public class Parcela{
     private LocalDate dataPagamento;
 
     @Enumerated(EnumType.STRING)
-    private StatusParcela status;
+    @Column(nullable = false)
+    private StatusParcela status = StatusParcela.ABERTA;
 
     @ManyToOne
     @JoinColumn(name = "pedido_id")
+    @JsonIgnore
     private Pedido pedido;
 
     public UUID getId() {

@@ -249,4 +249,16 @@ public class PedidoService {
 
         return parcelas;
     }
+
+    public List<Pedido> getPedidosComParcelasVencidas() {
+        atualizarParcelasVencidas();
+
+        return pedidoRepository.findAll().stream()
+                .filter(pedido ->
+                        pedido.getParcelas().stream()
+                                .anyMatch(parcela -> parcela.getStatus() == StatusParcela.VENCIDA)
+                )
+                .toList();
+    }
+
 }
