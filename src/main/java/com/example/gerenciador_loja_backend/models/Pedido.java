@@ -1,9 +1,12 @@
 package com.example.gerenciador_loja_backend.models;
 
+import com.example.gerenciador_loja_backend.enuns.FormaPagamento;
 import com.example.gerenciador_loja_backend.enuns.StatusDePagamento;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,20 +28,31 @@ public class Pedido {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    private Integer diaVencimento;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<ItemPedido> itens = new ArrayList<>();
 
-    private Double valorTotal;
+    private BigDecimal valorTotal;
 
     private Integer parcelasTotais;
 
     private Integer parcelasRestantes;
 
+    private Integer parcelasPagas; // <--- adicione aqui
+
     private double valorParcelas;
 
     @Enumerated(EnumType.STRING)
     private StatusDePagamento statusDePagamento;
+
+    @Enumerated(EnumType.STRING)
+    private FormaPagamento formaPagamento;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Parcela> parcelas = new ArrayList<>();
+
 
     // ===============================
     // GETTERS E SETTERS
@@ -60,8 +74,8 @@ public class Pedido {
         }
     }
 
-    public Double getValorTotal() { return valorTotal; }
-    public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+    public BigDecimal getValorTotal() { return valorTotal; }
+    public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
 
     public Integer getParcelasTotais() { return parcelasTotais; }
     public void setParcelasTotais(Integer parcelasTotais) { this.parcelasTotais = parcelasTotais; }
@@ -80,6 +94,38 @@ public class Pedido {
         this.valorParcelas = valorParcelas;
     }
 
+    public FormaPagamento getFormaPagamento() {
+        return formaPagamento;
+    }
+
+    public void setFormaPagamento(FormaPagamento formaPagamento) {
+        this.formaPagamento = formaPagamento;
+    }
+
+    public List<Parcela> getParcelas() {
+        return parcelas;
+    }
+
+    public void setParcelas(List<Parcela> parcelas) {
+        this.parcelas = parcelas;
+    }
+
+    public Integer getDiaVencimento() {
+        return diaVencimento;
+    }
+
+    public void setDiaVencimento(Integer diaVencimento) {
+        this.diaVencimento = diaVencimento;
+    }
+
+    public Integer getParcelasPagas() {
+        return parcelasPagas;
+    }
+
+    public void setParcelasPagas(Integer parcelasPagas) {
+        this.parcelasPagas = parcelasPagas;
+    }
+
     // ===============================
     // MÉTODOS DE CONVENIÊNCIA
     // ===============================
@@ -92,5 +138,20 @@ public class Pedido {
         itens.remove(item);
         item.setPedido(null);
     }
+
+    // ===============================
+// MÉTODOS DE CONVENIÊNCIA
+// ===============================
+    public void addParcela(Parcela parcela) {
+        parcelas.add(parcela);
+        parcela.setPedido(this);
+    }
+
+    public void removeParcela(Parcela parcela) {
+        parcelas.remove(parcela);
+        parcela.setPedido(null);
+    }
+
+
 
 }

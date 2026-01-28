@@ -2,6 +2,8 @@ package com.example.gerenciador_loja_backend.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -13,7 +15,7 @@ public class ItemPedido {
 
     private String nomeProduto;
     private Integer quantidade;
-    private Double precoUnitario;
+    private BigDecimal precoUnitario;
     private String tamanho;
 
     @ManyToOne
@@ -38,8 +40,8 @@ public class ItemPedido {
     public Integer getQuantidade() { return quantidade; }
     public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
 
-    public Double getPrecoUnitario() { return precoUnitario; }
-    public void setPrecoUnitario(Double precoUnitario) { this.precoUnitario = precoUnitario; }
+    public BigDecimal getPrecoUnitario() { return precoUnitario; }
+    public void setPrecoUnitario(BigDecimal precoUnitario) { this.precoUnitario = precoUnitario; }
 
     public Pedido getPedido() { return pedido; }
     public void setPedido(Pedido pedido) { this.pedido = pedido; }

@@ -1,7 +1,7 @@
 package com.example.gerenciador_loja_backend.controllers;
 
 import com.example.gerenciador_loja_backend.dtos.PedidoDto;
-import com.example.gerenciador_loja_backend.enuns.StatusDePagamento;
+import com.example.gerenciador_loja_backend.models.Parcela;
 import com.example.gerenciador_loja_backend.models.Pedido;
 import com.example.gerenciador_loja_backend.services.PedidoService;
 import org.springframework.http.ResponseEntity;
@@ -21,46 +21,83 @@ public class PedidoController {
     }
 
     // ==========================
-    // CRUD pedidos
+    // Listar todos os pedidos
     // ==========================
     @GetMapping
     public List<Pedido> getAll() {
         return pedidoService.getAllPedidos();
     }
 
+    // ==========================
+    // Buscar pedido por ID
+    // ==========================
     @GetMapping("/{id}")
     public ResponseEntity<Pedido> getOne(@PathVariable UUID id) {
         return pedidoService.getOnePedido(id);
     }
 
+    // ==========================
+    // Criar novo pedido
+    // ==========================
     @PostMapping
     public ResponseEntity<Pedido> criar(@RequestBody PedidoDto dto) {
         return pedidoService.criarPedido(dto);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<Pedido> atualizar(@PathVariable UUID id, @RequestBody PedidoDto dto) {
-        return pedidoService.atualizarPedido(id, dto);
+    // ==========================
+    // Atualizar pedido
+    // ==========================
+    @PutMapping("/{id}")
+    public ResponseEntity<Pedido> atualizarPedido(
+            @PathVariable UUID id,
+            @RequestBody PedidoDto dto
+    ) {
+        Pedido pedido = pedidoService.atualizarPedido(id, dto);
+        return ResponseEntity.ok(pedido);
     }
 
+
+
+    // ==========================
+    // Pedidos de um cliente
+    // ==========================
     @GetMapping("/cliente/{idCliente}")
-    public ResponseEntity<List<Pedido>> getPedidosPorCliente(@PathVariable UUID idCliente) {
+    public ResponseEntity<List<Pedido>> getPedidosPorCliente(
+            @PathVariable UUID idCliente
+    ) {
         List<Pedido> pedidos = pedidoService.getPedidosPorCliente(idCliente);
-        if (pedidos.isEmpty()) {
-            return ResponseEntity.noContent().build(); // ou ok com lista vazia
-        }
-        return ResponseEntity.ok(pedidos);
+        return pedidos.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(pedidos);
     }
 
+    // ==========================
+    // Deletar pedido
+    // ==========================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         boolean deletado = pedidoService.deletarPedido(id);
-        return deletado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        return deletado
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
+    // ==========================
+    // Pedidos com parcelas vencidas
+    // ==========================
+    @GetMapping("/vencidos")
+    public ResponseEntity<List<Pedido>> getPedidosVencidos() {
+        List<Pedido> pedidosVencidos = pedidoService.getPedidosComParcelasVencidas();
+        return pedidosVencidos.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(pedidosVencidos);
+    }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Pedido> atualizarPedido(@PathVariable UUID id, @RequestBody PedidoDto dto) {
-        return pedidoService.atualizarPedido(id, dto);
+    @PutMapping("/parcelas/{parcelaId}/pagar")
+    public ResponseEntity<Parcela> pagarParcela(
+            @PathVariable UUID parcelaId
+    ) {
+        Parcela parcela = pedidoService.pagarParcela(parcelaId);
+        return ResponseEntity.ok(parcela);
     }
 }

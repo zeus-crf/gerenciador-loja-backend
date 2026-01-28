@@ -3,8 +3,11 @@ package com.example.gerenciador_loja_backend.controllers;
 import com.example.gerenciador_loja_backend.dtos.DashboardGraficosResponse;
 import com.example.gerenciador_loja_backend.dtos.DashboardResponseDto;
 import com.example.gerenciador_loja_backend.services.DashboardService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -40,8 +43,20 @@ public class DashboardController {
 
     @GetMapping("/graficos")
     public ResponseEntity<DashboardGraficosResponse> buscarGraficos(
-            @RequestParam(defaultValue = "7d") String periodo
+            @RequestParam String periodo,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim
     ) {
-        return ResponseEntity.ok(dashboardService.buscarGraficos(periodo));
+        return ResponseEntity.ok(
+                dashboardService.buscarGraficos(periodo, dataInicio, dataFim)
+        );
     }
+
+
 }
