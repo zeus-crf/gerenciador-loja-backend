@@ -48,12 +48,15 @@ public class PedidoController {
     // Atualizar pedido
     // ==========================
     @PutMapping("/{id}")
-    public ResponseEntity<Pedido> atualizar(
+    public ResponseEntity<Pedido> atualizarPedido(
             @PathVariable UUID id,
             @RequestBody PedidoDto dto
     ) {
-        return pedidoService.atualizarPedido(id, dto);
+        Pedido pedido = pedidoService.atualizarPedido(id, dto);
+        return ResponseEntity.ok(pedido);
     }
+
+
 
     // ==========================
     // Pedidos de um cliente
@@ -90,9 +93,11 @@ public class PedidoController {
                 : ResponseEntity.ok(pedidosVencidos);
     }
 
-    @PutMapping("/{id}/pagar")
-    public ResponseEntity<Parcela> pagar(@PathVariable UUID id) {
-        Parcela parcela = pedidoService.pagarParcela(id);
+    @PutMapping("/parcelas/{parcelaId}/pagar")
+    public ResponseEntity<Parcela> pagarParcela(
+            @PathVariable UUID parcelaId
+    ) {
+        Parcela parcela = pedidoService.pagarParcela(parcelaId);
         return ResponseEntity.ok(parcela);
     }
 }

@@ -40,6 +40,8 @@ public class Pedido {
 
     private Integer parcelasRestantes;
 
+    private Integer parcelasPagas; // <--- adicione aqui
+
     private double valorParcelas;
 
     @Enumerated(EnumType.STRING)
@@ -49,8 +51,7 @@ public class Pedido {
     private FormaPagamento formaPagamento;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Parcela> parcelas;
-
+    private List<Parcela> parcelas = new ArrayList<>();
 
 
     // ===============================
@@ -117,6 +118,14 @@ public class Pedido {
         this.diaVencimento = diaVencimento;
     }
 
+    public Integer getParcelasPagas() {
+        return parcelasPagas;
+    }
+
+    public void setParcelasPagas(Integer parcelasPagas) {
+        this.parcelasPagas = parcelasPagas;
+    }
+
     // ===============================
     // MÉTODOS DE CONVENIÊNCIA
     // ===============================
@@ -129,5 +138,20 @@ public class Pedido {
         itens.remove(item);
         item.setPedido(null);
     }
+
+    // ===============================
+// MÉTODOS DE CONVENIÊNCIA
+// ===============================
+    public void addParcela(Parcela parcela) {
+        parcelas.add(parcela);
+        parcela.setPedido(this);
+    }
+
+    public void removeParcela(Parcela parcela) {
+        parcelas.remove(parcela);
+        parcela.setPedido(null);
+    }
+
+
 
 }

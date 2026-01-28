@@ -13,4 +13,5 @@ spring:
 api:
   security:
     token:
-      secret: ${api.security.token.secret}
+      secret: my-secret-key-2007
+

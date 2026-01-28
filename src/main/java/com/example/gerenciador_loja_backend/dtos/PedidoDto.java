@@ -10,14 +10,20 @@ import com.example.gerenciador_loja_backend.enuns.FormaPagamento;
 import com.example.gerenciador_loja_backend.enuns.StatusDePagamento;
 
 public record PedidoDto(
-        UUID idCliente,
-        List<ItemPedidoDto> itens,
-        String statusDePagamento,
+        String idCliente,
+
         Integer parcelasTotais,
-        Integer parcelasRestantes,
         Integer parcelasPagas,
+        Integer parcelasRestantes,
+
+        StatusDePagamento statusDePagamento,
         FormaPagamento formaPagamento,
-        Integer diaVencimento,
+
         LocalDate dataPrimeiroVencimento,
-        List<LocalDate> datasVencimento
-) { }
+        Double valorParcelas,
+        Integer diaVencimento,
+
+        List<ItemPedidoDto> itens,
+        List<ParcelaDto> parcelas
+) {}
+

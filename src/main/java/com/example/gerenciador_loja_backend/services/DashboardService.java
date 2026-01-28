@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -113,7 +114,11 @@ public class DashboardService {
         return serie;
     }
 
-    public DashboardGraficosResponse buscarGraficos(String periodo) {
+    public DashboardGraficosResponse buscarGraficos(
+            String periodo,
+            LocalDate dataInicioCustom,
+            LocalDate dataFimCustom
+    ) {
 
         List<String> labels = new ArrayList<>();
         List<Long> clientes = new ArrayList<>();
@@ -121,6 +126,9 @@ public class DashboardService {
 
         LocalDate hoje = LocalDate.now();
 
+        // =======================
+        // 12 meses (mensal)
+        // =======================
         if ("12m".equals(periodo)) {
 
             LocalDate inicio = hoje.minusMonths(11).withDayOfMonth(1);
@@ -137,25 +145,59 @@ public class DashboardService {
                 LocalDateTime fimMes = mes.withDayOfMonth(mes.lengthOfMonth())
                         .atTime(LocalTime.MAX);
 
-                long novosClientes =
-                        clienteRepository.countByCreatedAtBetween(inicioMes, fimMes);
+                clientes.add(
+                        clienteRepository.countByCreatedAtBetween(inicioMes, fimMes)
+                );
 
-                double totalVendas =
-                        pedidoRepository.sumValorTotalByDataCriacaoBetween(inicioMes, fimMes)
-                                .orElse(0.0);
-
-                clientes.add(novosClientes);
-                vendas.add(totalVendas);
+                vendas.add(
+                        pedidoRepository
+                                .sumValorTotalByDataCriacaoBetween(inicioMes, fimMes)
+                                .orElse(0.0)
+                );
             }
 
             return new DashboardGraficosResponse(labels, clientes, vendas);
         }
 
         // =======================
-        // 7d e 30d → diário
+        // Este mês (diário)
+        // =======================
+        if ("mes".equals(periodo)) {
+
+            LocalDate inicioMes = hoje.withDayOfMonth(1);
+            int diasNoMes = hoje.lengthOfMonth();
+
+            for (int i = 0; i < diasNoMes; i++) {
+                LocalDate dia = inicioMes.plusDays(i);
+
+                labels.add(dia.format(DateTimeFormatter.ofPattern("dd/MM")));
+
+                clientes.add(
+                        clienteRepository.countByCreatedAtBetween(
+                                dia.atStartOfDay(),
+                                dia.atTime(LocalTime.MAX)
+                        )
+                );
+
+                vendas.add(
+                        pedidoRepository
+                                .sumValorTotalByDataCriacaoBetween(
+                                        dia.atStartOfDay(),
+                                        dia.atTime(LocalTime.MAX)
+                                )
+                                .orElse(0.0)
+                );
+            }
+
+            return new DashboardGraficosResponse(labels, clientes, vendas);
+        }
+
+
+
+        // =======================
+        // 7d e 30d (diário)
         // =======================
         int dias = "30d".equals(periodo) ? 30 : 7;
-
         LocalDate inicio = hoje.minusDays(dias);
 
         for (int i = 0; i <= dias; i++) {
@@ -163,24 +205,26 @@ public class DashboardService {
 
             labels.add(dia.format(DateTimeFormatter.ofPattern("dd/MM")));
 
-            long novosClientes =
+            clientes.add(
                     clienteRepository.countByCreatedAtBetween(
                             dia.atStartOfDay(),
                             dia.atTime(LocalTime.MAX)
-                    );
+                    )
+            );
 
-            double totalVendas =
-                    pedidoRepository.sumValorTotalByDataCriacaoBetween(
-                            dia.atStartOfDay(),
-                            dia.atTime(LocalTime.MAX)
-                    ).orElse(0.0);
-
-            clientes.add(novosClientes);
-            vendas.add(totalVendas);
+            vendas.add(
+                    pedidoRepository
+                            .sumValorTotalByDataCriacaoBetween(
+                                    dia.atStartOfDay(),
+                                    dia.atTime(LocalTime.MAX)
+                            )
+                            .orElse(0.0)
+            );
         }
 
         return new DashboardGraficosResponse(labels, clientes, vendas);
     }
+
 
 }
 
