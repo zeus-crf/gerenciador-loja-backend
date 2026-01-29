@@ -41,10 +41,12 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/login").permitAll()
                         .requestMatchers("/dashboard/**", "/pedidos/**", "/clientes/**", "/usuarios/**").authenticated()
                         .anyRequest().denyAll()
                 )
+
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
