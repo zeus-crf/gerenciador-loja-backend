@@ -1,6 +1,7 @@
 package com.example.gerenciador_loja_backend.models;
 
 import com.example.gerenciador_loja_backend.enuns.StatusParcela;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -28,8 +29,9 @@ public class Parcela{
 
     @ManyToOne
     @JoinColumn(name = "pedido_id")
-    @JsonIgnore
+    @JsonBackReference
     private Pedido pedido;
+
 
     public UUID getId() {
         return id;

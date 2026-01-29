@@ -50,8 +50,15 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     private FormaPagamento formaPagamento;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "pedido",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
+    )
+    @JsonManagedReference
     private List<Parcela> parcelas = new ArrayList<>();
+
 
 
     // ===============================

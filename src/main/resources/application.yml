@@ -3,7 +3,7 @@ spring:
     name: gerenciador_loja_backend
 
   profiles:
-    active: dev # troque para prod em produção
+    active: prod # troque para prod em produção
 
   jackson:
     serialization:
