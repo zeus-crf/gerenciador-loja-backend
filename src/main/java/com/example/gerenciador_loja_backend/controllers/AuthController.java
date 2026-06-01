@@ -36,24 +36,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody LoginDto loginDto) {
 
-        // Busca o usuário pelo username
-        Usuario usuario = usuarioRepository.findByUsername(loginDto.username())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(loginDto.username());
 
-        // Verifica senha (AGORA CORRETO)
-        if (passwordEncoder.matches(loginDto.password(), usuario.getPassword())) {
-
-            // Gera o token JWT
-            String token = this.tokenService.generateToken(usuario);
-
-            // Retorna username + token
-            return ResponseEntity.ok(new LoginResponseDto(
-                    usuario.getUsername(),
-                    token
-            ));
+        if (usuarioOpt.isEmpty() || !passwordEncoder.matches(loginDto.password(), usuarioOpt.get().getPassword())) {
+            return ResponseEntity.status(401).body("Credenciais inválidas");
         }
 
-        return ResponseEntity.badRequest().body("Invalid credentials");
+        Usuario usuario = usuarioOpt.get();
+        String token = this.tokenService.generateToken(usuario);
+
+        return ResponseEntity.ok(new LoginResponseDto(usuario.getUsername(), token));
     }
 
 

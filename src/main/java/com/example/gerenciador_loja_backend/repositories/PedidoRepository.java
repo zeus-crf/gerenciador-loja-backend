@@ -64,7 +64,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
      * Retorno: [LocalDateTime (início do dia), totalPedidos]
      */
     @Query("""
-        SELECT 
+        SELECT
             FUNCTION('date_trunc', 'day', p.dataCriacao),
             COUNT(p)
         FROM Pedido p
@@ -81,7 +81,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
      * Retorno: [LocalDateTime (início do dia), valorTotal]
      */
     @Query("""
-        SELECT 
+        SELECT
             FUNCTION('date_trunc', 'day', p.dataCriacao),
             COALESCE(SUM(p.valorTotal), 0)
         FROM Pedido p
